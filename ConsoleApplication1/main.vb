@@ -51,6 +51,9 @@ Module main
 		Dim ProvideFreeUnit As Boolean
 		Dim hasbib As Boolean
 		Dim WasteFacility As Boolean
+		Dim dim_x As Integer
+		Dim dim_y As Integer
+
 
 	End Structure
 
@@ -75,13 +78,12 @@ Module main
 	Dim Vehicles As New List(Of Vehicle)
 	Dim Aircrafts As New List(Of AirCraft)
 	Dim TerainOpjects As New List(Of TerainObject)
+	Dim Rules As String = My.Application.Info.DirectoryPath & "\rules.ini"
+	Dim Art As String = My.Application.Info.DirectoryPath & "\art.ini"
+	Dim CivilianBuildingsFile As String = "D:\civilian.yaml"
+	Dim PlayerBuildingFile As String = "D:\Structures.yaml"
 
 	Sub Main()
-		Dim Rules As String = "D:\rules.ini"
-		Dim Art As String = "D:\art.ini"
-		Dim CivilianBuildingsFile As String = "D:\civilian.yaml"
-		Dim PlayerBuildingFile As String = "D:\Structures.yaml"
-
 		Dim isplayerbuilding As Boolean = True
 
 		Dim Section As String = "BuildingTypes"
@@ -233,12 +235,33 @@ Module main
 								.Buildable = False
 							End If
 
-							_tmp = INI.WertLesen(.ID, "Image", "")
+							_tmp = INI.WertLesen(.ID, "Image", Nothing)
 
 							If _tmp <> .ID AndAlso _tmp.Length > 0 Then
 								.Image = _tmp
+							Else
+								.Image = .ID
 							End If
+
+							If b.Image Is Nothing Then
+								b.Image = b.ID
+							End If
+
 						End With
+
+						Dim __xy() As String
+
+						If b.Image <> b.ID AndAlso b.Image.Length > 0 Then
+							If b.ID = "GAPLUG2" Then
+								__xy = Getfootprint("GAPLUG")
+							End If
+						Else
+							__xy = Getfootprint(b.ID)
+						End If
+
+
+						b.dim_x = CInt(__xy(0))
+						b.dim_y = CInt(__xy(1))
 
 						Buildings.Add(b)
 					End If
@@ -414,8 +437,8 @@ Module main
 
 					' <Phroh|orca> x is no passage, _ is just art that doesnt show up on the placement overlay, = is art that is shown on the placement overlay
 
-					sw.WriteLine(Chr(9) & Chr(9) & "Footprint: xxx xxx xxx # dummy")
-					sw.WriteLine(Chr(9) & Chr(9) & "Dimensions: ")	' Read from Art.ini :)
+					sw.WriteLine(Chr(9) & Chr(9) & "Footprint: " & DrawFootprintMap(entry.dim_x, entry.dim_y))
+					sw.WriteLine(Chr(9) & Chr(9) & "Dimensions: " & entry.dim_x & ", " & entry.dim_y)	' Read from Art.ini :)
 
 					If entry.Power <> 0 Then
 						sw.WriteLine(Chr(9) & "Power: ")
@@ -556,8 +579,12 @@ Module main
 					sw.Dispose()
 				Next
 
+				WriteSequences()
+
 				Buildings.Clear()
 			End If
+		Else
+			Console.WriteLine("cant find Rules.ini and art.ini")
 		End If
 		Console.ReadLine()
 	End Sub
@@ -573,5 +600,93 @@ Module main
 			Return False
 		End If
 	End Function
+
+	Private Function Getfootprint(ByVal bldif As String) As String()
+		Dim ISA As New INIDatei
+		Dim _tmp As String = ""
+
+		Dim _D() As String
+		ISA.Pfad = Art
+
+		_tmp = ISA.WertLesen(bldif, "Foundation", Nothing)
+
+		If _tmp IsNot Nothing Then
+			If _tmp.Length > 0 Then
+				_D = _tmp.Split(CChar("x"))
+				Return _D
+			End If
+		End If
+	End Function
+
+	Private Function DrawFootprintMap(x As Integer, y As Integer) As String
+		Dim _x As String = CStr(x)
+		Dim _y As String = CStr(y)
+
+		If _x = "1" And _y = "1" Then
+			Return "x"
+		ElseIf _x = "2" And _y = "2" Then
+			Return "xx xx"
+		ElseIf _x = "1" And _y = "2" Then
+			Return "xx"
+		ElseIf _x = "2" And _y = "1" Then
+			Return "xx"
+		ElseIf _x = "3" And _y = "3" Then
+			Return "xxx xxx xxx"
+		ElseIf _x = "2" And _y = "3" Then
+			Return "xxx xxx"
+		ElseIf _x = "3" And _y = "2" Then
+			Return "xxx xxx"
+		ElseIf _x = "4" And _y = "3" Then
+			Return "xxxx xxxx xxxx"
+		ElseIf _x = "3" And _y = "4" Then
+			Return "xxxx xxxx xxxx"
+		ElseIf _x = "4" And _y = "2" Then
+			Return "xxxx xxxx"
+		ElseIf _x = "3" And _y = "5" Then
+			Return "xxxxx xxxxx xxxxx"
+		ElseIf _x = "5" And _y = "3" Then
+			Return "xxx xxx xxx xxx xxx"
+		ElseIf _x = "2" And _y = "5" Then
+			Return "xxxxx xxxxx"
+		ElseIf _x = "2" And _y = "6" Then
+			Return "xxxxxx xxxxxx"
+		ElseIf _x = "2" And _y = "6" Then
+			Return "xxxxxx xxxxxx"
+		ElseIf _x = "4" And _y = "4" Then
+			Return "xxxx xxxx xxxx xxxx"
+		ElseIf _x = "3" And _y = "1" Then
+			Return "xxx"
+		ElseIf _x = "1" And _y = "3" Then
+			Return "xxx"
+		ElseIf _x = "6" And _y = "4" Then
+			Return "xxxxxx xxxxxx xxxxxx xxxxxx"
+		Else
+			Throw New Exception(_x & "-" & _y)
+		End If
+	End Function
+
+
+	Private Sub WriteSequences()
+		Dim xr2 As New StreamWriter(My.Application.Info.DirectoryPath & "\civi_squences.yaml")
+		xr2.NewLine = Environment.NewLine
+
+		For Each entry As Building In Buildings
+			If entry.TechLevel = "-1" Then
+				xr2.WriteLine(entry.ID.ToLower & ":")
+				xr2.WriteLine(Chr(9) & "idle: " & entry.ID.ToLower)
+				xr2.WriteLine(Chr(9) & Chr(9) & "start: 0")
+				xr2.WriteLine(Chr(9) & Chr(9) & "ShadowStart: 2")
+				xr2.WriteLine("")
+			End If
+		Next
+
+		xr2.Close()
+		xr2.Dispose()
+	End Sub
+
+
+
+
+
 
 End Module
