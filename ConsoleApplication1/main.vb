@@ -444,15 +444,16 @@ Module main
 						sw.WriteLine(Chr(9) & "ProductionBar:")
 						sw.WriteLine(Chr(9) & "PrimaryBuilding:")
 
-						If entry.isWarFactory Then
+						If entry.isWarFactory Or entry.isBarracks Then
 							sw.WriteLine(Chr(9) & "RallyPoint:")
 							sw.WriteLine(Chr(9) & "Production:")
+						End If
+
+						If entry.isWarFactory Then
 							sw.WriteLine(Chr(9) & Chr(9) & "Produces: Vehicle")
 						End If
 
 						If entry.isBarracks Then
-							sw.WriteLine(Chr(9) & "RallyPoint:")
-							sw.WriteLine(Chr(9) & "Production:")
 							sw.WriteLine(Chr(9) & Chr(9) & "Produces: Infantry")
 						End If
 
@@ -494,7 +495,7 @@ Module main
 					End If
 
 					If entry.isWall Then
-						Dim _WallType = "sandbags"
+						Dim _WallType As String = "sandbags"
 
 						If entry.ID = "GASAND" Then
 							_WallType = "sandbags"
