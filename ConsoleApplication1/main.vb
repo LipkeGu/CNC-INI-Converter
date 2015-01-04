@@ -57,31 +57,11 @@ Module main
 
 	End Structure
 
-	Structure Infantry
-
-	End Structure
-
-	Structure Vehicle
-
-	End Structure
-
-	Structure AirCraft
-
-	End Structure
-
-	Structure TerainObject
-
-	End Structure
-
 	Dim Buildings As New List(Of Building)
-	Dim Infantrys As New List(Of Infantry)
-	Dim Vehicles As New List(Of Vehicle)
-	Dim Aircrafts As New List(Of AirCraft)
-	Dim TerainOpjects As New List(Of TerainObject)
 	Dim Rules As String = My.Application.Info.DirectoryPath & "\rules.ini"
 	Dim Art As String = My.Application.Info.DirectoryPath & "\art.ini"
-	Dim CivilianBuildingsFile As String = "D:\civilian.yaml"
-	Dim PlayerBuildingFile As String = "D:\Structures.yaml"
+	Dim CivilianBuildingsFile As String = My.Application.Info.DirectoryPath & "civilian.yaml"
+	Dim PlayerBuildingFile As String = My.Application.Info.DirectoryPath & "Structures.yaml"
 
 	Sub Main()
 		Dim isplayerbuilding As Boolean = True
@@ -92,8 +72,6 @@ Module main
 		INI.Pfad = Rules
 
 		If File.Exists(Rules) Then
-
-
 			For i As Integer = 0 To 255 Step 1
 				Dim _tmp As String
 				line = Replace(INI.WertLesen(Section, CStr(i)), ";", "#")
@@ -259,7 +237,6 @@ Module main
 							__xy = Getfootprint(b.ID)
 						End If
 
-
 						b.dim_x = CInt(__xy(0))
 						b.dim_y = CInt(__xy(1))
 
@@ -342,8 +319,10 @@ Module main
 						sw.WriteLine(Chr(9) & "Inherits: ^Building")
 					End If
 
-					sw.WriteLine(Chr(9) & "Valued:")
-					sw.WriteLine(Chr(9) & Chr(9) & "Cost: " & entry.Cost)
+					If entry.Buildable Then
+						sw.WriteLine(Chr(9) & "Valued:")
+						sw.WriteLine(Chr(9) & Chr(9) & "Cost: " & entry.Cost)
+					End If
 
 					sw.WriteLine(Chr(9) & "ToolTip:")
 					sw.WriteLine(Chr(9) & Chr(9) & "Name: " & entry.Name)
@@ -405,20 +384,22 @@ Module main
 						Unlocker = factory
 					End If
 
-					sw.WriteLine(Chr(9) & "Buildable:")
+					If (entry.Buildable) Then
+						sw.WriteLine(Chr(9) & "Buildable:")
 
-					If entry.isBaseDefence Then
-						entry.DefenceBuilding = True
-					End If
+						If entry.isBaseDefence Then
+							entry.DefenceBuilding = True
+						End If
 
-					If entry.isWall Then
-						entry.DefenceBuilding = True
-					End If
+						If entry.isWall Then
+							entry.DefenceBuilding = True
+						End If
 
-					If entry.DefenceBuilding = False Then
-						sw.WriteLine(Chr(9) & Chr(9) & "Queue: Building")
-					Else
-						sw.WriteLine(Chr(9) & Chr(9) & "Queue: Defense")
+						If entry.DefenceBuilding = False Then
+							sw.WriteLine(Chr(9) & Chr(9) & "Queue: Building")
+						Else
+							sw.WriteLine(Chr(9) & Chr(9) & "Queue: Defense")
+						End If
 					End If
 
 					If entry.Prereqs IsNot Nothing Then
@@ -428,14 +409,15 @@ Module main
 						End If
 					End If
 
-					sw.WriteLine(Chr(9) & Chr(9) & "BuildPaletteOrder: " & CStr(order * 10))
+					If entry.Buildable Then
+						sw.WriteLine(Chr(9) & Chr(9) & "BuildPaletteOrder: " & CStr(order * 10))
+					End If
+
 					sw.WriteLine(Chr(9) & "Building:")
 
 					If entry.Adjacent <> "2" Then
 						sw.WriteLine(Chr(9) & Chr(9) & "Adjacent: " & entry.Adjacent)
 					End If
-
-					' <Phroh|orca> x is no passage, _ is just art that doesnt show up on the placement overlay, = is art that is shown on the placement overlay
 
 					sw.WriteLine(Chr(9) & Chr(9) & "Footprint: " & DrawFootprintMap(entry.dim_x, entry.dim_y))
 					sw.WriteLine(Chr(9) & Chr(9) & "Dimensions: " & entry.dim_x & ", " & entry.dim_y)	' Read from Art.ini :)
@@ -580,11 +562,10 @@ Module main
 				Next
 
 				WriteSequences()
-
 				Buildings.Clear()
 			End If
 		Else
-			Console.WriteLine("cant find Rules.ini and art.ini")
+			Console.WriteLine("cant find rules.ini and art.ini")
 		End If
 		Console.ReadLine()
 	End Sub
@@ -627,41 +608,43 @@ Module main
 		ElseIf _x = "2" And _y = "2" Then
 			Return "xx xx"
 		ElseIf _x = "1" And _y = "2" Then
-			Return "xx"
+			Return "x x"
 		ElseIf _x = "2" And _y = "1" Then
 			Return "xx"
 		ElseIf _x = "3" And _y = "3" Then
 			Return "xxx xxx xxx"
 		ElseIf _x = "2" And _y = "3" Then
-			Return "xxx xxx"
+			Return "xx xx xx"
 		ElseIf _x = "3" And _y = "2" Then
 			Return "xxx xxx"
 		ElseIf _x = "4" And _y = "3" Then
 			Return "xxxx xxxx xxxx"
 		ElseIf _x = "3" And _y = "4" Then
-			Return "xxxx xxxx xxxx"
+			Return "xxx xxx xxx xxx"
 		ElseIf _x = "4" And _y = "2" Then
 			Return "xxxx xxxx"
 		ElseIf _x = "3" And _y = "5" Then
-			Return "xxxxx xxxxx xxxxx"
-		ElseIf _x = "5" And _y = "3" Then
 			Return "xxx xxx xxx xxx xxx"
+		ElseIf _x = "5" And _y = "3" Then
+			Return "xxxxx xxxxx xxxxx"
 		ElseIf _x = "2" And _y = "5" Then
+			Return "xx xx xx xx xx"
+		ElseIf _x = "5" And _y = "2" Then
 			Return "xxxxx xxxxx"
 		ElseIf _x = "2" And _y = "6" Then
-			Return "xxxxxx xxxxxx"
-		ElseIf _x = "2" And _y = "6" Then
+			Return "xx xx xx xx xx xx"
+		ElseIf _x = "6" And _y = "2" Then
 			Return "xxxxxx xxxxxx"
 		ElseIf _x = "4" And _y = "4" Then
 			Return "xxxx xxxx xxxx xxxx"
 		ElseIf _x = "3" And _y = "1" Then
 			Return "xxx"
 		ElseIf _x = "1" And _y = "3" Then
-			Return "xxx"
+			Return "x x x"
 		ElseIf _x = "6" And _y = "4" Then
 			Return "xxxxxx xxxxxx xxxxxx xxxxxx"
 		Else
-			Throw New Exception(_x & "-" & _y)
+			Return " x # FIXME"
 		End If
 	End Function
 
