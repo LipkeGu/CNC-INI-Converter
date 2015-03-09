@@ -658,7 +658,7 @@ Module main
 			If entry.TechLevel = "-1" Then
 				xr2.WriteLine(entry.ID.ToLower & ":")
 				xr2.WriteLine(Chr(9) & "idle: " & entry.ID.ToLower)
-                xr2.WriteLine(Chr(9) & Chr(9) & "Start: 0")
+				xr2.WriteLine(Chr(9) & Chr(9) & "Start: 0")
 				xr2.WriteLine(Chr(9) & Chr(9) & "ShadowStart: 2")
 				xr2.WriteLine("")
 			End If
